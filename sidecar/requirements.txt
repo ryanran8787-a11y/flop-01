@@ -1,0 +1,12 @@
+# 版本皆以 2026-10 PyPI 實際存在者為準（pip index / wheel 內碼核實）。
+# faster-whisper 1.2.1：_MODELS 含 large-v3-turbo（mobiuslabsgmbh），vad.py 內建 Silero。
+# edge-tts 7.2.8：Communicate.save 非同步存檔，例外階層 EdgeTTSException/WebSocketError。
+# websockets 17.1：asyncio serve API 可能與舊版不同，app.py 用 try/except 雙路 import（需驗證）。
+faster-whisper==1.2.1
+edge-tts==7.2.8
+nvidia-ml-py==13.615.71
+websockets==17.1
+sounddevice==0.5.6
+numpy==2.5.3
+huggingface-hub==2.1.1
+psutil==7.2.2
