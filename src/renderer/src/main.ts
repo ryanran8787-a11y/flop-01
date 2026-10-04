@@ -176,7 +176,10 @@ if (api !== undefined) {
       return;
     }
     try {
-      await avatar.loadModel(vp);
+      const loadTimeout = new Promise<never>(
+        (_res, rej) => setTimeout(() => rej(new Error('VRM 載入逾時（15s）')), 15000),
+      );
+      await Promise.race([avatar.loadModel(vp), loadTimeout]);
       stage.hidePlaceholder();
       refreshProxies();
       avatar.slideDistance = stage.offscreenDistance();
