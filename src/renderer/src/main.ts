@@ -27,9 +27,15 @@ interface PreloadApi {
 
 const api = (window as unknown as { api?: PreloadApi }).api;
 const debug = document.getElementById('debug') as HTMLElement | null;
+const lines: string[] = [];
 const say = (s: string): void => {
-  if (debug !== null) debug.textContent = s;
+  lines.push(s);
+  while (lines.length > 3) lines.shift();
+  if (debug !== null) debug.textContent = lines.join('\n');
 };
+window.addEventListener('error', (e) => {
+  say(`頁面錯誤：${e.message}`);
+});
 
 const bus = createEventBus<AppEventMap>();
 const canvasEl = document.getElementById('scene') as HTMLCanvasElement | null;
@@ -37,8 +43,10 @@ if (canvasEl === null) throw new Error('缺 #scene canvas');
 const canvas: HTMLCanvasElement = canvasEl;
 
 const stage = new Stage(canvas, { fpsCap: 60 });
+say('stage ok');
 const avatar = new AvatarController(stage.scene, bus);
 avatar.slideDistance = stage.offscreenDistance();
+say('avatar ok');
 
 let outfits: Array<{ id: string; name: string; vrmPath: string }> = [];
 let muted = false;
