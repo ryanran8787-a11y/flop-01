@@ -2,14 +2,13 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * preload 實際檔名 electron-vite 產出為 index.mjs（package type: module），
- * 不是 index.js。寫死會靜默載入失敗 → window.api 缺失。
- * 純函數（fromDir 傳 main 輸出目錄，即 __dirname）。
+ * preload 實際檔名依打包格式而定（CJS 強制後為 index.cjs）。
+ * 優先順序：cjs（沙盒可載）> mjs > js；都沒有回 cjs 預設。
  */
 export function resolvePreloadPath(fromDir: string): string {
-  for (const f of ['index.mjs', 'index.js']) {
+  for (const f of ['index.cjs', 'index.mjs', 'index.js']) {
     const p = join(fromDir, '../preload', f);
     if (existsSync(p)) return p;
   }
-  return join(fromDir, '../preload/index.mjs');
+  return join(fromDir, '../preload/index.cjs');
 }
