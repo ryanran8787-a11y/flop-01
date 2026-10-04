@@ -33,6 +33,9 @@ const say = (s: string): void => {
   while (lines.length > 3) lines.shift();
   if (debug !== null) debug.textContent = lines.join('\n');
 };
+// 每次載入都不同的開機 ID：重啟後若 ID 沒變，看到的就是殭屍視窗
+const BOOT_ID = Math.random().toString(36).slice(2, 7);
+say(`boot ${BOOT_ID}`);
 window.addEventListener('error', (e) => {
   say(`頁面錯誤：${e.message}`);
 });
