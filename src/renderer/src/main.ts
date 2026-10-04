@@ -373,11 +373,19 @@ document.addEventListener('mousemove', (e) => {
   }
 });
 
-// 主迴圈
+// 主迴圈（獨立心跳：若執行緒全死，連 hb 都不會印）
 let last = performance.now();
 let idleTimer = 0;
+let loopFrames = 0;
+setInterval(() => {
+  // eslint-disable-next-line no-console
+  console.log(
+    `[hb] frames=${loopFrames} visibility=${document.visibilityState} focus=${document.hasFocus()}`,
+  );
+}, 2000);
 function loop(now: number): void {
   requestAnimationFrame(loop);
+  loopFrames += 1;
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
   engine.tick(now);
