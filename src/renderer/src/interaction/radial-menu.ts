@@ -26,6 +26,7 @@ export class RadialMenu {
   constructor(
     private doc: Document,
     private onSelect: (id: RadialItemId) => void,
+    private onClose: () => void = () => {},
   ) {}
 
   get isOpen(): boolean {
@@ -70,9 +71,11 @@ export class RadialMenu {
   }
 
   close(): void {
+    const wasOpen = this.root !== null;
     this.root?.remove();
     this.backdrop?.remove();
     this.root = null;
     this.backdrop = null;
+    if (wasOpen) this.onClose();
   }
 }

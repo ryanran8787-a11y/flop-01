@@ -40,6 +40,7 @@ function setup(part: HitPart = 'none', interact = true): {
     probeHit: () => part,
     menu,
     muted: () => false,
+    onMenuOpened: vi.fn(),
     onOutfit: vi.fn(),
     onSettings: vi.fn(),
     onToggleMute: vi.fn(),
@@ -80,11 +81,14 @@ describe('InteractionController', () => {
     expect(sent).toEqual([{ ch: 'win:dragMove', data: { dx: 5, dy: 6 } }]);
   });
 
-  it('longpress → 開選單；leave 期間全忽略', () => {
-    const { ctl, menu } = setup('head');
+  it('longpress → 開選單並通知保持接收事件', () => {
+    const { ctl, menu, cb } = setup('head');
     ctl.onGesture({ type: 'longpress', x: 9, y: 9 });
     expect(menu.opened).toEqual([{ x: 9, y: 9 }]);
+    expect(cb.onMenuOpened).toHaveBeenCalledTimes(1);
+  });
 
+  it('leave 期間全忽略', () => {
     const locked = setup('head', false);
     locked.ctl.onGesture({ type: 'click', x: 1, y: 1 });
     locked.ctl.onGesture({ type: 'longpress', x: 1, y: 1 });

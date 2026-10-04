@@ -21,6 +21,7 @@ export interface InteractionCallbacks {
   probeHit: (x: number, y: number) => HitPart;
   menu: RadialMenu;
   muted: () => boolean;
+  onMenuOpened?: () => void;
   onOutfit: () => void;
   onSettings: () => void;
   onToggleMute: () => void;
@@ -61,6 +62,7 @@ export class InteractionController {
       case 'longpress': {
         if (!this.avatar.canInteract) return;
         this.cb.menu.open(g.x, g.y, this.cb.muted());
+        this.cb.onMenuOpened?.();
         break;
       }
     }

@@ -228,13 +228,25 @@ function probeHit(clientX: number, clientY: number): HitPart {
   return pickPart(toNdc(clientX, clientY, rect), stage.camera, active);
 }
 
-const menu = new RadialMenu(document, (id) => interaction.onMenuSelect(id));
+const menu = new RadialMenu(
+  document,
+  (id) => interaction.onMenuSelect(id),
+  () => {
+    // 選單關閉：強制下一次 mousemove 重算穿透（恢復穿透）
+    lastProbe = 0;
+  },
+);
 const engine = new GestureEngine((g) => interaction.onGesture(g));
 const interaction = new InteractionController(avatar, {
   sendDrag: (dx, dy) => api?.send('win:dragMove', { dx, dy }),
   probeHit,
   menu,
   muted: () => muted,
+  onMenuOpened: () => {
+    // 選單開著時強制接收事件（按鈕多在透明區，否則 click 被穿透吃掉）
+    api?.send('win:hitTest', { hit: true });
+    lastHit = true;
+  },
   onOutfit: () => {
     if (outfits.length === 0) {
       say('沒有可用換裝（在設定頁加入 outfits，階段 8）');
@@ -254,8 +266,7 @@ const interaction = new InteractionController(avatar, {
       (err) => say(`換裝失敗，已保留原角色：${(err as Error).message}`),
     );
   },
-  // TODO(階段8): 開設定視窗（main 端 win:showSettings 接線一併做）
-  onSettings: () => say('設定頁在階段 8'),
+  onSettings: () => api?.send('win:showSettings'),
   onToggleMute: () => {
     muted = !muted;
     if (muted) ttsPlayer.cancel();
@@ -266,6 +277,7 @@ const interaction = new InteractionController(avatar, {
 
 // DOM 指標事件 → 手勢引擎（pointer capture 保證拖出窗外仍收到 move）
 canvas.addEventListener('pointerdown', (e) => {
+  menu.close();
   canvas.setPointerCapture(e.pointerId);
   engine.down(e.clientX, e.clientY, performance.now());
   idleTimer = 0;
@@ -284,7 +296,7 @@ canvas.addEventListener('pointercancel', () => engine.cancel());
 let lastHit = false;
 let lastProbe = 0;
 document.addEventListener('mousemove', (e) => {
-  if (api === undefined) return;
+  if (api === undefined || menu.isOpen) return; // 選單開著時保持接收事件
   const now = performance.now();
   if (now - lastProbe < 66) return;
   lastProbe = now;
