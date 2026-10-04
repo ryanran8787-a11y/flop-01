@@ -23,7 +23,10 @@ export class Stage {
   ) {
     this.fpsCap = opts.fpsCap ?? 60;
     this.occludedPaused = opts.occludedPaused ?? false;
-    this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    // 注意：antialias 必須 false。Windows 透明視窗 + MSAA 在 ANGLE 下會卡死
+    // （原生 webgl2 上下文正常，THREE.WebGLRenderer 帶 antialias 即 hang，實測）。
+    // stencil 用不到也關掉，省一個 buffer。
+    this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, stencil: false });
     this.renderer.setClearColor(0x000000, 0);
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
     // 半身取景：角色高 1.6，取胸上
