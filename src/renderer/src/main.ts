@@ -39,6 +39,9 @@ say(`boot ${BOOT_ID}`);
 window.addEventListener('error', (e) => {
   say(`頁面錯誤：${e.message}`);
 });
+window.addEventListener('unhandledrejection', (e) => {
+  say(`未處理拒絕：${e.reason instanceof Error ? e.reason.message : String(e.reason)}`);
+});
 
 const bus = createEventBus<AppEventMap>();
 const canvasEl = document.getElementById('scene') as HTMLCanvasElement | null;
