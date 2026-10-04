@@ -94,7 +94,11 @@ if (api !== undefined) {
   async function loadFromConfig(): Promise<void> {
     const a = api;
     if (a === undefined) return;
-    const cfg = (await a.invoke('config:get')) as {
+    say('config 讀取中…');
+    const timeout = new Promise<never>(
+      (_res, rej) => setTimeout(() => rej(new Error('config:get 逾時（8s）')), 8000),
+    );
+    const cfg = (await Promise.race([a.invoke('config:get'), timeout])) as {
       vrmPath?: string;
       fpsCap?: number;
       outfits?: Array<{ id: string; name: string; vrmPath: string }>;
