@@ -104,25 +104,33 @@ window.addEventListener('resize', () => {
   avatar.slideDistance = stage.offscreenDistance();
 });
 
-// IPC 接線
+// IPC 接線（每條單獨防護：任一條拋錯都留字串並繼續，不許靜默）
+// NOTE：window error 事件在此頁曾漏報，關鍵段一律手動 try/catch。
+function onSafe(channel: string, cb: (d: unknown) => void): void {
+  try {
+    api?.on(channel, cb);
+  } catch (err) {
+    say(`訂閱 ${channel} 失敗：${(err as Error).message}`);
+  }
+}
 if (api !== undefined) {
-  api.on('cursor:pos', (d) => {
+  onSafe('cursor:pos', (d) => {
     const p = d as { x: number; y: number };
     // 視窗穿透時 renderer 收不到視窗外滑鼠事件，故由 main 輪詢經此傳入
     avatar.lookAtCursor(p, viewport);
   });
-  api.on('avatar:emotion', (d) => {
+  onSafe('avatar:emotion', (d) => {
     avatar.setEmotion((d as { emotion: Emotion }).emotion);
   });
-  api.on('avatar:action', (d) => {
+  onSafe('avatar:action', (d) => {
     avatar.playAction((d as { action: Action }).action);
   });
-  api.on('avatar:thinking', (d) => {
+  onSafe('avatar:thinking', (d) => {
     const on = (d as { on?: boolean }).on === true;
     avatar.setThinking(on);
     say(on ? '思考中…' : '');
   });
-  api.on('ui:notify', (d) => {
+  onSafe('ui:notify', (d) => {
     bubble.show(String((d as { text?: unknown }).text ?? ''));
   });
   let lastVrmPath: string | null = null;
@@ -145,6 +153,7 @@ if (api !== undefined) {
   }
   async function loadFromConfig(): Promise<void> {
     let cfg: BootCfg;
+    say('invoke 已送出');
     try {
       cfg = await fetchConfig();
     } catch (err) {
@@ -180,12 +189,13 @@ if (api !== undefined) {
     safePlaceholder(`config 讀取失敗：${(err as Error).message}`);
   });
   // 換裝（LLM outfitId / 設定頁）走 config vrmPath，renderer 自動重載
-  api.on('config:onChanged', (d) => {
+  onSafe('config:onChanged', (d) => {
     const keys = (d as { keys?: unknown }).keys;
     if (Array.isArray(keys) && keys.includes('vrmPath')) {
       void loadFromConfig().catch(() => {});
     }
   });
+  say('ipc ok');
 } else {
   stage.showPlaceholder();
   say('preload 未就緒（瀏覽器直開除錯模式）');
@@ -263,18 +273,18 @@ function ensureAnalyser(audio: HTMLAudioElement): void {
 }
 
 if (api !== undefined) {
-  api.on('tts:file', (d) => {
+  onSafe('tts:file', (d) => {
     const f = d as { id: string; path: string; url?: string };
     ttsPlayer.speakFile(f.id, f.url ?? f.path);
   });
   // TTS 斷網降級：只顯示文字氣泡（reply 文字由階段 7 的對話編排附帶，這裡先顯示錯誤）
-  api.on('tts:error', (d) => {
+  onSafe('tts:error', (d) => {
     const e = d as { id: string; code: string; message: string };
     bubble.show(`語音暫時不可用（${e.code}），先用文字回你喔`);
     say(`tts.error ${e.code}: ${e.message}`);
   });
-  api.on('tts:cancel', () => ttsPlayer.cancel());
-  api.on('stt:bargein', () => ttsPlayer.cancel());
+  onSafe('tts:cancel', () => ttsPlayer.cancel());
+  onSafe('stt:bargein', () => ttsPlayer.cancel());
 }
 let outfitIndex = -1;
 
