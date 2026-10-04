@@ -70,6 +70,8 @@ function boot(): void {
   applyCsp();
 
   const preloadPath = resolvePreloadPath(__dirname);
+  // eslint-disable-next-line no-console
+  console.log(`[boot] preload=${preloadPath} exists=${existsSync(preloadPath)}`);
   mainWin = createMainWindow(cfg, { preloadPath });
   registerWindowIpc(mainWin, hit, cfg);
   registerConfigIpc(() => mainWin);

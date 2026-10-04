@@ -49,6 +49,16 @@ export function createMainWindow(cfg: AppConfig, opts: { preloadPath: string }):
 
   win.once('ready-to-show', () => win.show());
 
+  // 診斷：preload 載入失敗時把原因印到 main 終端機
+  win.webContents.on('preload-error', (_event, preloadPath, error) => {
+    // eslint-disable-next-line no-console
+    console.error(`[preload-error] ${preloadPath}: ${(error as Error).message}`);
+  });
+  win.webContents.on('did-fail-load', (_event, code, desc, url) => {
+    // eslint-disable-next-line no-console
+    console.error(`[page-fail-load] ${code} ${desc} ${url}`);
+  });
+
   if (process.env['ELECTRON_RENDERER_URL'] !== undefined) {
     void win.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
