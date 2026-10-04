@@ -32,6 +32,9 @@ const say = (s: string): void => {
   lines.push(s);
   while (lines.length > 3) lines.shift();
   if (debug !== null) debug.textContent = lines.join('\n');
+  // 終端機同步一份，免轉述失真
+  // eslint-disable-next-line no-console
+  console.log(`[ui] ${s}`);
 };
 // 每次載入都不同的開機 ID：重啟後若 ID 沒變，看到的就是殭屍視窗
 const BOOT_ID = Math.random().toString(36).slice(2, 7);
