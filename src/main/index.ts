@@ -26,6 +26,7 @@ import { patchConfigFile } from './config-store.js';
 import { registerVoiceHotkeys, startVadIfConfigured } from './voice-input.js';
 import { shouldProactive } from './proactive.js';
 import { createTray } from './tray.js';
+import { resolvePreloadPath } from './preload-path.js';
 
 registerAssetPrivileges();
 
@@ -68,7 +69,7 @@ function boot(): void {
   cfg = loadConfigFromFile(getConfigPath(userData));
   applyCsp();
 
-  const preloadPath = join(__dirname, '../preload/index.js');
+  const preloadPath = resolvePreloadPath(__dirname);
   mainWin = createMainWindow(cfg, { preloadPath });
   registerWindowIpc(mainWin, hit, cfg);
   registerConfigIpc(() => mainWin);

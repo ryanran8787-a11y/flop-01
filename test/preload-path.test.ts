@@ -1,0 +1,19 @@
+import { describe, expect, it } from 'vitest';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { resolvePreloadPath } from '../src/main/preload-path.js';
+
+describe('resolvePreloadPath', () => {
+  it('優先 index.mjs，其次 index.js，缺檔回 mjs 預設', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pre-'));
+    mkdirSync(join(dir, 'main'), { recursive: true });
+    mkdirSync(join(dir, 'preload'), { recursive: true });
+    const from = join(dir, 'main');
+    expect(resolvePreloadPath(from)).toBe(join(dir, 'preload', 'index.mjs'));
+    writeFileSync(join(dir, 'preload', 'index.js'), 'x');
+    expect(resolvePreloadPath(from)).toBe(join(dir, 'preload', 'index.js'));
+    writeFileSync(join(dir, 'preload', 'index.mjs'), 'x');
+    expect(resolvePreloadPath(from)).toBe(join(dir, 'preload', 'index.mjs'));
+  });
+});
