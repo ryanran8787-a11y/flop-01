@@ -48,9 +48,21 @@ const canvasEl = document.getElementById('scene') as HTMLCanvasElement | null;
 if (canvasEl === null) throw new Error('缺 #scene canvas');
 const canvas: HTMLCanvasElement = canvasEl;
 
-const stage = new Stage(canvas, { fpsCap: 60 });
+let stage: Stage;
+try {
+  stage = new Stage(canvas, { fpsCap: 60 });
+} catch (err) {
+  say(`Stage 建立失敗：${(err as Error).message}`);
+  throw err;
+}
 say('stage ok');
-const avatar = new AvatarController(stage.scene, bus);
+let avatar: AvatarController;
+try {
+  avatar = new AvatarController(stage.scene, bus);
+} catch (err) {
+  say(`Avatar 建立失敗：${(err as Error).message}`);
+  throw err;
+}
 avatar.slideDistance = stage.offscreenDistance();
 say('avatar ok');
 
