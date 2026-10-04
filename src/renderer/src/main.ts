@@ -380,11 +380,15 @@ document.addEventListener('mousemove', (e) => {
 let last = performance.now();
 let idleTimer = 0;
 let loopFrames = 0;
+let hbCount = 0;
 setInterval(() => {
+  hbCount += 1;
   // eslint-disable-next-line no-console
   console.log(
     `[hb] frames=${loopFrames} visibility=${document.visibilityState} focus=${document.hasFocus()}`,
   );
+  // 心跳同時寫進小字：若終端有 hb 而小字沒有，對面就是殭屍窗
+  if (debug !== null) debug.textContent = [...lines, `hb ${hbCount}`].join('\n');
 }, 2000);
 function loop(now: number): void {
   requestAnimationFrame(loop);
