@@ -50,6 +50,9 @@ const canvas: HTMLCanvasElement = canvasEl;
 
 let stage: Stage;
 try {
+  // 原生探針：先排除 GPU 層卡死（若連這行都不印，就是 getContext 卡住）
+  const probe = document.createElement('canvas').getContext('webgl2');
+  say(probe ? 'webgl2 ok' : 'webgl2 null（將用軟體渲染）');
   stage = new Stage(canvas, { fpsCap: 60 });
 } catch (err) {
   say(`Stage 建立失敗：${(err as Error).message}`);
