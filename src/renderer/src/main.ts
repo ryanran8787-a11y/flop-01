@@ -102,19 +102,32 @@ if (api !== undefined) {
     bubble.show(String((d as { text?: unknown }).text ?? ''));
   });
   let lastVrmPath: string | null = null;
-  async function loadFromConfig(): Promise<void> {
+  interface BootCfg {
+    vrmPath?: string;
+    fpsCap?: number;
+    outfits?: Array<{ id: string; name: string; vrmPath: string }>;
+    avatar?: { backend?: string };
+  }
+  let cachedCfg: BootCfg | null = null;
+  async function fetchConfig(): Promise<BootCfg> {
     const a = api;
-    if (a === undefined) return;
-    say('config 讀取中…');
+    if (a === undefined) throw new Error('preload 未就緒');
     const timeout = new Promise<never>(
-      (_res, rej) => setTimeout(() => rej(new Error('config:get 逾時（8s）')), 8000),
+      (_res, rej) => setTimeout(() => rej(new Error('config:get 逾時（3s）')), 3000),
     );
-    const cfg = (await Promise.race([a.invoke('config:get'), timeout])) as {
-      vrmPath?: string;
-      fpsCap?: number;
-      outfits?: Array<{ id: string; name: string; vrmPath: string }>;
-      avatar?: { backend?: string };
-    };
+    const cfg = (await Promise.race([a.invoke('config:get'), timeout])) as BootCfg;
+    cachedCfg = cfg;
+    return cfg;
+  }
+  async function loadFromConfig(): Promise<void> {
+    let cfg: BootCfg;
+    try {
+      cfg = await fetchConfig();
+    } catch (err) {
+      // invoke 卡住也不擋開機：用快取或預設值繼續（placeholder 照出、按鈕照用）
+      say(`config 讀取失敗，用預設值繼續：${(err as Error).message}`);
+      cfg = cachedCfg ?? {};
+    }
     if (cfg.avatar?.backend === 'live2d-stub') {
       // 預留介面驗證：stub 可實例化，但渲染仍走 VRM（不中斷使用）
       new Live2DRendererStub().dispose();
