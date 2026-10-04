@@ -63,6 +63,17 @@ function refreshProxies(): void {
   }
 }
 
+/** 建佔位（自身加防護：throw 也要留下錯誤字串，不許靜默）。 */
+function safePlaceholder(reason: string): void {
+  try {
+    stage.showPlaceholder();
+  } catch (err) {
+    say(`佔位建立失敗：${(err as Error).message}`);
+    return;
+  }
+  say(reason);
+}
+
 let viewport = { width: window.innerWidth, height: window.innerHeight };
 window.addEventListener('resize', () => {
   viewport = { width: window.innerWidth, height: window.innerHeight };
@@ -115,8 +126,7 @@ if (api !== undefined) {
     if (vp === lastVrmPath) return;
     lastVrmPath = vp;
     if (vp === null) {
-      stage.showPlaceholder();
-      say('尚未選擇 VRM（設定頁選擇後即時切換，階段 8）');
+      safePlaceholder('尚未選擇 VRM（設定頁選擇後即時切換）');
       return;
     }
     try {
@@ -126,13 +136,11 @@ if (api !== undefined) {
       avatar.slideDistance = stage.offscreenDistance();
       say('VRM 已載入');
     } catch (err) {
-      stage.showPlaceholder();
-      say(`VRM 載入失敗，已保留原角色：${(err as Error).message}`);
+      safePlaceholder(`VRM 載入失敗，已保留原角色：${(err as Error).message}`);
     }
   }
-  void loadFromConfig().catch(() => {
-    stage.showPlaceholder();
-    say('config 讀取失敗，顯示佔位');
+  void loadFromConfig().catch((err) => {
+    safePlaceholder(`config 讀取失敗：${(err as Error).message}`);
   });
   // 換裝（LLM outfitId / 設定頁）走 config vrmPath，renderer 自動重載
   api.on('config:onChanged', (d) => {
@@ -233,8 +241,7 @@ if (api !== undefined) {
 }
 let outfitIndex = -1;
 
-function probeHit(clientX: number, clientY: number): HitPart {
-  const active = avatar.hitRoot() !== null ? vrmProxies : stage.pickProxies();
+function probeHit(clientX: number, clientY: number): HitPart {  const active = avatar.hitRoot() !== null ? vrmProxies : stage.pickProxies();
   if (active.head === null && active.body === null) return 'none';
   const rect = canvas.getBoundingClientRect();
   return pickPart(toNdc(clientX, clientY, rect), stage.camera, active);
